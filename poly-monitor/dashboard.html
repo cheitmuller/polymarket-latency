@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Poly Monitor - BTC 15m</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0a0f;
+      color: #e0e0e0;
+      font-family: 'SF Mono', 'Consolas', monospace;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    h1 {
+      text-align: center;
+      color: #888;
+      font-size: 14px;
+      font-weight: normal;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .card {
+      background: #12121a;
+      border: 1px solid #2a2a3a;
+      border-radius: 8px;
+      padding: 20px;
+    }
+    .card-title {
+      color: #666;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 15px;
+    }
+    .price-main {
+      font-size: 42px;
+      font-weight: bold;
+      color: #fff;
+    }
+    .price-change {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 14px;
+      margin-right: 10px;
+    }
+    .positive { background: #0d3d2e; color: #00ff88; }
+    .negative { background: #3d1a1a; color: #ff4444; }
+    .neutral { background: #2a2a3a; color: #888; }
+
+    .odds-container {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .odds-box {
+      flex: 1;
+      text-align: center;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    .odds-up { background: linear-gradient(135deg, #0d3d2e 0%, #0a2a1f 100%); }
+    .odds-down { background: linear-gradient(135deg, #3d1a1a 0%, #2a1010 100%); }
+    .odds-value {
+      font-size: 36px;
+      font-weight: bold;
+    }
+    .odds-up .odds-value { color: #00ff88; }
+    .odds-down .odds-value { color: #ff4444; }
+    .odds-label {
+      color: #888;
+      font-size: 12px;
+      margin-top: 5px;
+    }
+    .liquidity {
+      color: #666;
+      font-size: 11px;
+      margin-top: 8px;
+    }
+
+    .sum-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid #2a2a3a;
+    }
+    .sum-label { color: #888; }
+    .sum-value { font-weight: bold; }
+    .arb-alert {
+      color: #ffaa00;
+      background: #3d2d00;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      margin-left: 10px;
+    }
+
+    .countdown {
+      font-size: 64px;
+      font-weight: bold;
+      text-align: center;
+      color: #fff;
+    }
+    .countdown.urgent { color: #ff4444; }
+    .market-slug {
+      text-align: center;
+      color: #666;
+      font-size: 11px;
+      margin-top: 10px;
+    }
+
+    .full-width { grid-column: 1 / -1; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    th {
+      text-align: left;
+      color: #666;
+      font-weight: normal;
+      padding: 8px;
+      border-bottom: 1px solid #2a2a3a;
+    }
+    td {
+      padding: 8px;
+      border-bottom: 1px solid #1a1a2a;
+    }
+    tr:hover { background: #1a1a2a; }
+    .move-positive { color: #00ff88; }
+    .move-negative { color: #ff4444; }
+
+    .no-events {
+      text-align: center;
+      color: #444;
+      padding: 40px;
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+    .status-connected { background: #00ff88; }
+    .status-disconnected { background: #ff4444; }
+
+    .samples-row td {
+      padding: 0;
+      background: #0a0a12;
+    }
+    .samples-container {
+      padding: 10px 15px;
+      border-left: 3px solid #2a2a3a;
+      margin-left: 20px;
+    }
+    .samples-title {
+      color: #666;
+      font-size: 10px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .samples-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .sample-item {
+      background: #1a1a2a;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      min-width: 90px;
+    }
+    .sample-offset {
+      color: #666;
+      margin-right: 5px;
+    }
+    .sample-up { color: #00ff88; }
+    .sample-down { color: #ff4444; }
+    .sample-separator { color: #444; margin: 0 3px; }
+    .samples-loading {
+      color: #666;
+      font-style: italic;
+      font-size: 11px;
+    }
+    .event-row { cursor: pointer; }
+    .event-row:hover { background: #1a1a2a; }
+    .expand-icon {
+      color: #666;
+      font-size: 10px;
+      margin-right: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1><span class="status-dot status-disconnected" id="statusDot"></span>Poly Monitor - BTC 15m Markets</h1>
+
+  <div class="grid">
+    <div class="card">
+      <div class="card-title">Binance BTC/USDT</div>
+      <div class="price-main" id="binancePrice">--</div>
+      <div style="margin-top: 15px;">
+        <span class="price-change neutral" id="change1m">1m: --</span>
+        <span class="price-change neutral" id="change5m">5m: --</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Market Countdown</div>
+      <div class="countdown" id="countdown">--:--</div>
+      <div class="market-slug" id="marketSlug">--</div>
+    </div>
+
+    <div class="card full-width">
+      <div class="card-title">Polymarket Odds</div>
+      <div class="odds-container">
+        <div class="odds-box odds-up">
+          <div class="odds-value" id="oddsUp">--</div>
+          <div class="odds-label">UP</div>
+          <div class="liquidity" id="liqUp">Liquidity: --</div>
+        </div>
+        <div class="odds-box odds-down">
+          <div class="odds-value" id="oddsDown">--</div>
+          <div class="odds-label">DOWN</div>
+          <div class="liquidity" id="liqDown">Liquidity: --</div>
+        </div>
+      </div>
+      <div class="sum-row">
+        <span class="sum-label">UP + DOWN Sum:</span>
+        <span>
+          <span class="sum-value" id="sumValue">--</span>
+          <span class="arb-alert" id="arbAlert" style="display: none;">ARB OPPORTUNITY</span>
+        </span>
+      </div>
+    </div>
+
+    <div class="card full-width">
+      <div class="card-title">Latency Events
+        <span style="margin-left: 15px; font-size: 10px;">
+          <span style="color: #888;">● 0.05%</span>
+          <span style="color: #ffaa00; margin-left: 10px;">● 0.10%</span>
+          <span style="color: #ff4444; margin-left: 10px;">● 0.15%</span>
+        </span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Threshold</th>
+            <th>BTC Price</th>
+            <th>Move</th>
+            <th>Poly UP</th>
+            <th>Poly DOWN</th>
+            <th>UP Liq</th>
+            <th>DOWN Liq</th>
+          </tr>
+        </thead>
+        <tbody id="eventsTable">
+          <tr><td colspan="8" class="no-events">No latency events detected yet</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    let ws;
+    let reconnectTimeout;
+
+    function connect() {
+      ws = new WebSocket(`ws://${window.location.host}`);
+
+      ws.onopen = () => {
+        document.getElementById('statusDot').className = 'status-dot status-connected';
+        console.log('Connected to server');
+      };
+
+      ws.onclose = () => {
+        document.getElementById('statusDot').className = 'status-dot status-disconnected';
+        console.log('Disconnected, reconnecting...');
+        reconnectTimeout = setTimeout(connect, 2000);
+      };
+
+      ws.onerror = (err) => {
+        console.error('WebSocket error:', err);
+      };
+
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        updateDashboard(data);
+      };
+    }
+
+    function formatPrice(price) {
+      if (price === null) return '--';
+      return '$' + price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function formatOdds(odds) {
+      if (odds === null) return '--';
+      return (odds * 100).toFixed(1) + '¢';
+    }
+
+    function formatChange(change, el) {
+      if (change === null) {
+        el.textContent = el.id === 'change1m' ? '1m: --' : '5m: --';
+        el.className = 'price-change neutral';
+        return;
+      }
+      const prefix = el.id === 'change1m' ? '1m: ' : '5m: ';
+      const sign = change >= 0 ? '+' : '';
+      el.textContent = prefix + sign + change.toFixed(3) + '%';
+      el.className = 'price-change ' + (change > 0 ? 'positive' : change < 0 ? 'negative' : 'neutral');
+    }
+
+    function updateDashboard(data) {
+      // Binance price
+      document.getElementById('binancePrice').textContent = formatPrice(data.binancePrice);
+
+      // Price changes
+      formatChange(data.change1m, document.getElementById('change1m'));
+      formatChange(data.change5m, document.getElementById('change5m'));
+
+      // Polymarket odds
+      document.getElementById('oddsUp').textContent = formatOdds(data.polymarketUp);
+      document.getElementById('oddsDown').textContent = formatOdds(data.polymarketDown);
+      document.getElementById('liqUp').textContent = 'Liquidity: ' + Math.round(data.polymarketLiquidityUp || 0).toLocaleString();
+      document.getElementById('liqDown').textContent = 'Liquidity: ' + Math.round(data.polymarketLiquidityDown || 0).toLocaleString();
+
+      // Sum and arb detection
+      const sumEl = document.getElementById('sumValue');
+      const arbEl = document.getElementById('arbAlert');
+      if (data.upDownSum !== null) {
+        sumEl.textContent = '$' + data.upDownSum.toFixed(3);
+        if (data.upDownSum < 1) {
+          arbEl.style.display = 'inline';
+        } else {
+          arbEl.style.display = 'none';
+        }
+      } else {
+        sumEl.textContent = '--';
+        arbEl.style.display = 'none';
+      }
+
+      // Countdown
+      if (data.marketEndTime) {
+        const now = Date.now();
+        const remaining = Math.max(0, data.marketEndTime - now);
+        const minutes = Math.floor(remaining / 60000);
+        const seconds = Math.floor((remaining % 60000) / 1000);
+        const countdownEl = document.getElementById('countdown');
+        countdownEl.textContent = String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
+        countdownEl.className = 'countdown' + (remaining < 60000 ? ' urgent' : '');
+      }
+
+      // Market slug
+      document.getElementById('marketSlug').textContent = data.marketSlug || '--';
+
+      // Latency events
+      const tbody = document.getElementById('eventsTable');
+      if (data.latencyEvents && data.latencyEvents.length > 0) {
+        tbody.innerHTML = data.latencyEvents.map((e, idx) => {
+          const moveClass = e.binanceMove.startsWith('-') ? 'move-negative' : 'move-positive';
+          const time = new Date(e.time).toLocaleTimeString();
+          const thresholdColor = e.thresholdColor || '#888';
+
+          // Build samples display
+          let samplesHtml = '';
+          if (e.samples && e.samples.length > 0) {
+            const samplesContent = e.samples.map(s => {
+              const upPct = (s.polyUp * 100).toFixed(0);
+              const downPct = (s.polyDown * 100).toFixed(0);
+              return `<span class="sample-item">
+                <span class="sample-offset">${s.offset}</span>
+                <span class="sample-up">${upPct}</span>
+                <span class="sample-separator">/</span>
+                <span class="sample-down">${downPct}</span>
+              </span>`;
+            }).join('');
+
+            const isComplete = e.samples.length >= 11;
+            const statusText = isComplete ? '' : '<span class="samples-loading"> (sampling...)</span>';
+
+            samplesHtml = `<tr class="samples-row">
+              <td colspan="8">
+                <div class="samples-container">
+                  <div class="samples-title">Polymarket Reaction (UP/DOWN ¢)${statusText}</div>
+                  <div class="samples-grid">${samplesContent}</div>
+                </div>
+              </td>
+            </tr>`;
+          }
+
+          return `<tr class="event-row">
+            <td><span class="expand-icon">${e.samples && e.samples.length > 0 ? '▼' : '○'}</span>${time}</td>
+            <td style="color: ${thresholdColor}; font-weight: bold;">${e.threshold || '0.15%'}</td>
+            <td>${formatPrice(e.binancePrice)}</td>
+            <td class="${moveClass}">${e.binanceMove}</td>
+            <td>${formatOdds(e.polyUp)}</td>
+            <td>${formatOdds(e.polyDown)}</td>
+            <td>${Math.round(e.polyLiqUp || 0).toLocaleString()}</td>
+            <td>${Math.round(e.polyLiqDown || 0).toLocaleString()}</td>
+          </tr>${samplesHtml}`;
+        }).join('');
+      }
+    }
+
+    connect();
+  </script>
+</body>
+</html>
